@@ -1,0 +1,7 @@
+discord.py
+aiohttp
+aiofiles
+pyautogui
+plyer
+psutil
+chardet
