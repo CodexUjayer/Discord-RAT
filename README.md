@@ -12,6 +12,8 @@ A remote administration Tool over discord. Easy to use, undetected and powerfull
 
 This Python Programm basically hosts a discord bot on the Computer its executed on, which allows the user who configured it to remotely control the computer via Discord commands. It supports a variety of features such as executing commands, taking screenshots, managing files, and more.
 
+## Oh, yeah and only for Educational Purposes of course < 3 hehe
+
 ## Features
 
 - **Ping:** Check the bot's latency.
