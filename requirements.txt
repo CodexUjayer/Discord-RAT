@@ -5,3 +5,8 @@ pyautogui
 plyer
 psutil
 chardet
+pillow
+pynput
+requests
+pyaudio
+pyttsx3

