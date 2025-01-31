@@ -10,3 +10,4 @@ pynput
 requests
 pyaudio
 pyttsx3
+python-vlc
