@@ -76,8 +76,6 @@ To run the bot, execute the script:
 python your_script_name.py
 ```
 
-Hier ist die aktualisierte Tabelle, die die zusätzlichen Commands enthält:
-
 ## Commands
 
 | Command                      | Description                                                                                         |
