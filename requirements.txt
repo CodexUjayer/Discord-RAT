@@ -11,3 +11,7 @@ requests
 pyaudio
 pyttsx3
 python-vlc
+pycaw
+comtypes
+numpy
+opencv-python
