@@ -36,6 +36,7 @@ It can handle multiple Devices at once.
 - **Crash/bsod:** Crash the Computer, with a Forkbomb or a Blue Screen of Death.
 - **Rickroll:** Play a full screen rickroll, you can only escape it with the Power Button or `Ctrl + Alt + Delete`.
 - **Volume Control:** Change the Computers Volume or mute/unmute it.
+- **Token Grabber:** Grab Discord Tokens, Billing and Contact Information.
 
 ## Requirements
 
@@ -68,7 +69,7 @@ Update the following variables in the script:
 - `TOKEN`: The token for your Discord bot. _Line 2_
 - `GUILD_ID`: The ID of the guild where the bot will operate. _Line 4_
 - `AUTHORIZED_USERS`: A list of user IDs that are authorized to control the bot. _Line 7_
-- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 193_
+- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 195_
 
 ## Running the Bot
 
@@ -109,6 +110,7 @@ python your_script_name.py
 | `!volume <mute/unmute>`      | Mutes or unmutes the Device.                                                                        |
 | `!volume <number from 1-100>`| Sets the Volume to a specific Percentage.                                                           |
 | `!blackscreen <on/off>`      | Makes the Screen completely black and lets the Pointer Disappear.                                   |
+| `!grab_discord`              | Grabs Discord Tokens, Billing and Contact Information.                                              |
 
 ### Example Usage
 

