@@ -1,5 +1,5 @@
 ## _Notice:_
-_Everything in the Code is German yet (except the !help command)... i will translate it soon, sry_
+_!! In the latest version the code as .exe gets detected by MSDefender!! Use an earlier commit or wait to bypass that_
 
 _The Code is still in the Beta, i started making it like 1 day before i uploaded it here._
 
