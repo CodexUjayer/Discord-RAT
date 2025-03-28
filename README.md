@@ -17,26 +17,26 @@ It can handle multiple Devices at once.
 
 ## Features
 
-- **Ping:** Check the bot's latency.
-- **Screenshot:** Take a screenshot and send it via Discord.
-- **Execute Commands:** Run any CMD and PowerShell commands.
-- **File Management:** Upload and download files.
-- **Remote Execution:** Download and execute any Programms from a URL.
-- **Notifications:** Send system notifications.
-- **System Control:** Restart or shut down the computer.
-- **Admin Rights:** Elevate the bot to run with admin privileges.
-- **WiFi Profiles:** Export and send WiFi profiles and passwords.
-- **System Info:** Retrieve system information.
-- **Task Management:** List and kill processes.
-- **Purge Messages:** Clear bot messages and commands in the channel.
-- **Live Stream Mic:** Livestream the Computers Microphone to a discord voice channel.
-- **Keylogger:** Log keystrokes and sends them to a Discord channel
-- **TTS:** Play Text To Speech Messages on the Computer
-- **Denial of Service:** Completely block the users input, Keyboard and Mouse. Or make the screen completely black and let the pointer disappear.
-- **Crash/bsod:** Crash the Computer, with a Forkbomb or a Blue Screen of Death.
-- **Rickroll:** Play a full screen rickroll, you can only escape it with the Power Button or `Ctrl + Alt + Delete`.
-- **Volume Control:** Change the Computers Volume or mute/unmute it.
-- **Token Grabber:** Grab Discord Tokens, Billing and Contact Information.
+- **📶 Ping:** Check the bot's latency.  
+- **📸 Screenshot:** Take a screenshot and send it via Discord.  
+- **💻 Execute Commands:** Run any CMD and PowerShell commands.  
+- **📂 File Management:** Upload and download files.  
+- **🌐 Remote Execution:** Download and execute any programs from a URL.  
+- **🔔 Notifications:** Send system notifications.  
+- **🖥️ System Control:** Restart or shut down the computer.  
+- **🔑 Admin Rights:** Elevate the bot to run with admin privileges.  
+- **📡 WiFi Credentials:** Export and send WiFi profiles and passwords.  
+- **📝 System Info:** Retrieve system information.  
+- **⚙️ Task Management:** List and kill processes.  
+- **🧹 Purge Messages:** Clear bot messages and commands in the channel.  
+- **🎙️ Live Stream Mic:** Livestream the computer’s microphone to a Discord voice channel.  
+- **⌨️ Keylogger:** Log keystrokes and send them to a Discord channel.  
+- **🗣️ TTS:** Play Text-to-Speech messages on the computer.  
+- **⛔ Denial of Service:** Block the user's input (keyboard & mouse) or make the screen black with a hidden cursor.  
+- **💥 Crash/BSOD:** Crash the computer with a forkbomb or Blue Screen of Death.  
+- **🎵 Rickroll:** Play a full-screen Rickroll that can only be escaped with the power button or `Ctrl + Alt + Delete`.  
+- **🔊 Volume Control:** Change the computer’s volume or mute/unmute it.  
+- **🕵️ Token Grabber:** Grab Discord tokens, billing, and contact information.
 
 ## Requirements
 
