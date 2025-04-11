@@ -1,5 +1,5 @@
 # Ersetzen Sie dies durch Ihr Bot-Token
-TOKEN = 'YOUR_DISCORD_TOKEN'
+TOKEN = 'YOUR_BOT_TOKEN'
 
 GUILD_ID = YOUR_GUILD_ID
 
