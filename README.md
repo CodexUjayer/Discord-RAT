@@ -71,7 +71,7 @@ Update the following variables in the script:
 - `TOKEN`: The token for your Discord bot. _Line 2_
 - `GUILD_ID`: The ID of the guild where the bot will operate. _Line 4_
 - `AUTHORIZED_USERS`: A list of user IDs that are authorized to control the bot. _Line 7_
-- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 195_
+- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 211_
 
 ## Running the Bot
 
