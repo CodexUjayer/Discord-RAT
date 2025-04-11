@@ -15,6 +15,8 @@ It can handle multiple Devices at once.
 
 ## Oh, yeah and only for Educational Purposes of course < 3 hehe
 
+[![Stargazers repo roster for @truelockmc/PC-Optimus](https://reporoster.com/stars/dark/truelockmc/PC-Optimus)](https://github.com/truelockmc/Discord-RAT/stargazers)
+
 ## Features
 
 - **📶 Ping:** Check the bot's latency.  
