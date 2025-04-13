@@ -66,7 +66,7 @@ It can handle multiple Devices at once.
 Replace the following Placeholder values in the script:
 - `TOKEN = 'YOUR_BOT_TOKEN'`: The token for your Discord bot. _Line 2_
 - `GUILD_ID = YOUR_GUILD_ID`: The ID of the guild where the bot will operate. _Line 4_
-- `AUTHORIZED_USERS = [YOUR_USER_ID]S`: A list of user IDs that are authorized to control the bot. _Line 7_
+- `AUTHORIZED_USERS = [YOUR_USER_ID]`: A list of user IDs that are authorized to control the bot. _Line 7_
 - `channel_ids['voice'] = YOUR_VOICE_CHANNEL_ID`: The ID of an Voice Channel on your Server. _Line 211_
 
 ## Running the Bot
