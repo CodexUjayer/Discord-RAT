@@ -59,11 +59,7 @@ It can handle multiple Devices at once.
     pip install -r requirements.txt
     ```
 
-3. Replace placeholders in the script with your actual values:
-    - `YOUR_BOT_TOKEN`: Your Discord bot token.
-    - `YOUR_GUILD_ID`: Your Discord guild (server) ID.
-    - `YOUR_USER_ID`: Your Discord user ID(s) who are authorized to control the bot.
-	- `YOUR_VOICE_CHANNEL_ID`: The ID of an Voice Channel on your Server
+3. Replace placeholders in the script with your actual values
 
 ## Configuration
 
@@ -71,7 +67,7 @@ Update the following variables in the script:
 - `TOKEN`: The token for your Discord bot. _Line 2_
 - `GUILD_ID`: The ID of the guild where the bot will operate. _Line 4_
 - `AUTHORIZED_USERS`: A list of user IDs that are authorized to control the bot. _Line 7_
-- `channel_ids['voice']`: The ID of an Voice Channel on your Server. _Line 211_
+- `YOUR_VOICE_CHANNEL_ID`: The ID of an Voice Channel on your Server. _Line 211_
 
 ## Running the Bot
 
