@@ -1,7 +1,7 @@
 ## _Notice:_
 _!! In the latest version the code as .exe gets detected by MSDefender!! Use an earlier commit or wait to bypass that_
 
-_The Code is still in the Beta, i started making it like 1 day before i uploaded it here._
+_Most of the Code and Comments are German yet, i will fully translate it soon
 
 _The Code is pretty unreadable bcs everything is one file. Thats on purpose bcs i dont want to have the pain with multiple Files in PyInstaller. I wont add a Builder or something because then tooo skiddy people are gonna use it_
 
