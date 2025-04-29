@@ -15,3 +15,4 @@ opencv-python
 pycaw
 pycryptodome
 comtypes
+pynacl

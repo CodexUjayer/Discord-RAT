@@ -52,6 +52,7 @@ import cv2
 from Crypto.Cipher import AES
 from discord import Embed
 from win32crypt import CryptUnprotectData
+import nacl
 
 admin_status_file = "admin_status.txt"  # Füge diese Zeile hinzu, um die Variable zu definieren
 
