@@ -139,3 +139,6 @@ Feel free to submit issues or pull requests if you have suggestions or improveme
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0)
+
+## Contact / Help
+You can always create an Issue here on Github, contact me on [![Discord](https://img.shields.io/badge/Discord-%237289DA.svg?logo=discord&logoColor=white)](https://discord.gg/wDESTYeZy9), or using my email: anonyson@proton.me.
