@@ -1,5 +1,4 @@
 ## _Notice:_
-_!! In the latest version the code as .exe gets detected by MSDefender!! Use an earlier commit or wait to bypass that_
 
 _Most of the Code and Comments are German yet, i will fully translate it soon_
 
