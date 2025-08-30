@@ -6,9 +6,6 @@ _The Code is pretty unreadable bcs everything is one file. I wont add a Builder 
 
 _Please help me by contributing more Features and reporting issues and improvements._
 
-
-
-
 # Discord-RAT
 A remote administration Tool over discord. Easy to use, undetected and powerfull.
 
@@ -75,7 +72,7 @@ Replace the following Placeholder values in the script:
 
 To run the bot, execute the script:
 ```sh
-python your_script_name.py
+python Program.py
 ```
 
 ## Commands
