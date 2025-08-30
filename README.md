@@ -6,7 +6,6 @@ _The Code is pretty unreadable bcs everything is one file. I wont add a Builder 
 
 _Please help me by contributing more Features and reporting issues and improvements._
 
-<img width="339" height="288" alt="image" src="https://github.com/user-attachments/assets/cf35a50f-73b1-4984-a0bd-ecd0aecd72a0" />
 
 
 
