@@ -20,7 +20,6 @@ import shutil
 import asyncio
 from discord.ui import View, Button
 from plyer import notification
-import winreg
 import ctypes
 import sys
 import time
