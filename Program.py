@@ -1,10 +1,10 @@
 # Ersetzen Sie dies durch Ihr Bot-Token
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = 'MTQxMTcyNDQxNzQ5ODYxMTkzNQ.GevoQT.VARSkOIBq9H1wy2p-_62tO_lBsagAyNN8d4Sog'
 
-GUILD_ID = YOUR_GUILD_ID
+GUILD_ID = 1402700952817107054
 
 # Ersetzen Sie dies durch Ihre Discord-Benutzer-ID(s), die den Bot steuern dürfen
-AUTHORIZED_USERS = [YOUR_USER_ID]
+AUTHORIZED_USERS = [1398517616770809926]
 
 import discord
 from discord.ext import commands
